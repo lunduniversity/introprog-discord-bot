@@ -2,13 +2,13 @@
 import net.dv8tion.jda.api.{JDABuilder, JDA}
 import net.dv8tion.jda.api.requests.GatewayIntent
 
-// Scala imports
-import scala.util.{Try, Success, Failure}
-
 // Internal imports
 import discord.Bot
 import config.BotConfig
 import utils.Logger
+
+// Scala imports
+import scala.util.{Try, Success, Failure}
 
 @main def run(): Unit =
   BotConfig
@@ -32,10 +32,29 @@ def instantiateBot(config: BotConfig): Unit =
       .build()
 
     (bot, jda)
-  }.map(runBot)
+  }.map(startBot)
     .recover(exception =>
       Logger.errorWithException("Failed to instantiate bot", exception)
       sys.exit(1)
     )
 
-def runBot(bot: Bot, jda: JDA): Unit = ???
+def startBot(bot: Bot, jda: JDA): Unit =
+  Try {
+    jda.awaitReady()
+    Logger.info("Bot is now running! Press Ctrl+C to stop.")
+
+    sys.addShutdownHook { stopBot(bot, jda) }
+
+    Thread.currentThread().join()
+  }.recover {
+    case _: InterruptedException =>
+      Logger.info("Bot interrupted")
+      stopBot(bot, jda)
+    case exception =>
+      Logger.errorWithException("Bot runtime error", exception)
+      stopBot(bot, jda)
+  }
+
+def stopBot(bot: Bot, jda: JDA): Unit =
+  Logger.info("Shutting down gracefully...")
+  jda.shutdown()

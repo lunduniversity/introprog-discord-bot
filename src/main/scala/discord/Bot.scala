@@ -1,9 +1,12 @@
 package discord
 
-import config.BotConfig
+// External imports
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
+
+// Internal imports
+import config.BotConfig
 
 class Bot(config: BotConfig) extends ListenerAdapter {
 

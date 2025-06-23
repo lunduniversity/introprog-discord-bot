@@ -1,7 +1,10 @@
 package config
 
-import scala.util.{Try, Success, Failure}
+// Internal imports
 import utils.Logger
+
+// Scala imports
+import scala.util.{Try, Success, Failure}
 
 case class BotConfig(
     discordToken: String,
