@@ -11,11 +11,13 @@ import config.BotConfig
 import utils.Logger
 
 @main def run(): Unit =
-  BotConfig.load() match
-    case Success(config) => instantiateBot(config)
-    case Failure(exception) =>
+  BotConfig
+    .load()
+    .map(instantiateBot)
+    .recover(exception =>
       Logger.errorWithException("Failed to load configuration", exception)
       sys.exit(1)
+    )
 
 def instantiateBot(config: BotConfig): Unit =
   Try {
@@ -23,16 +25,17 @@ def instantiateBot(config: BotConfig): Unit =
     val jda = JDABuilder
       .createLight(
         config.discordToken,
-        GatewayIntent.GUILD_MESSAGES
+        GatewayIntent.GUILD_MESSAGES,
+        GatewayIntent.GUILD_MEMBERS
       )
       .addEventListeners(bot)
       .build()
 
     (bot, jda)
-  } match
-    case Success((bot, jda)) => runBot(bot, jda)
-    case Failure(exception) =>
+  }.map(runBot)
+    .recover(exception =>
       Logger.errorWithException("Failed to instantiate bot", exception)
       sys.exit(1)
+    )
 
 def runBot(bot: Bot, jda: JDA): Unit = ???
