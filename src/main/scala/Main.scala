@@ -1,6 +1,8 @@
 // External imports
 import net.dv8tion.jda.api.{JDABuilder, JDA}
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.MemberCachePolicy
+import net.dv8tion.jda.api.utils.cache.CacheFlag
 
 // Internal imports
 import discord.Bot
@@ -23,11 +25,13 @@ def instantiateBot(config: BotConfig): Unit =
   Try {
     val bot = Bot(config)
     val jda = JDABuilder
-      .createLight(
+      .createDefault(
         config.discordToken,
         GatewayIntent.GUILD_MESSAGES,
         GatewayIntent.GUILD_MEMBERS
       )
+      .setMemberCachePolicy(MemberCachePolicy.ALL)
+      .enableCache(CacheFlag.MEMBER_OVERRIDES)
       .addEventListeners(bot)
       .build()
 
@@ -57,4 +61,5 @@ def startBot(bot: Bot, jda: JDA): Unit =
 
 def stopBot(bot: Bot, jda: JDA): Unit =
   Logger.info("Shutting down gracefully...")
+  bot.shutdown()
   jda.shutdown()
