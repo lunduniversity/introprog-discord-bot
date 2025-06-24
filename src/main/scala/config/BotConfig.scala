@@ -8,8 +8,7 @@ import scala.util.{Try, Success, Failure}
 
 case class BotConfig(
     discordToken: String,
-    discordGuildId: String,
-    nicknameWarnChannelName: String
+    discordGuildId: String
 )
 
 object BotConfig:
@@ -17,11 +16,9 @@ object BotConfig:
     for
       token <- getRequiredEnv("DISCORD_TOKEN")
       guildId <- getRequiredEnv("DISCORD_GUILD_ID")
-      nicknameWarnChannelName <- getRequiredEnv("NICKNAME_WARN_CHANNEL_NAME")
     yield BotConfig(
       discordToken = token,
-      discordGuildId = guildId,
-      nicknameWarnChannelName = nicknameWarnChannelName
+      discordGuildId = guildId
     )
 
   private def getRequiredEnv(key: String): Try[String] =

@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.entities.Member
 
 // Internal imports
-import config.BotConfig
+import config.{BotConfig, Constants}
 import utils.Logger
 import utils.Nicknames
 
@@ -20,7 +20,7 @@ import scala.jdk.CollectionConverters.*
 import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
-class Bot(config: BotConfig) extends ListenerAdapter {
+class Bot(botConfig: BotConfig) extends ListenerAdapter {
 
   private val scheduler: ScheduledExecutorService =
     Executors.newScheduledThreadPool(2)
@@ -97,7 +97,7 @@ class Bot(config: BotConfig) extends ListenerAdapter {
 
       case None =>
         Logger.error(
-          s"Warning channel '${config.nicknameWarnChannelName}' not found in guild ${member.getGuild.getName}"
+          s"Warning channel '${Constants.Nicknames.WARN_TEXT_CHANNEL_NAME}' not found in guild ${member.getGuild.getName}"
         )
     }
   }
@@ -107,7 +107,7 @@ class Bot(config: BotConfig) extends ListenerAdapter {
   ): Option[TextChannel] = {
     Try {
       guild
-        .getTextChannelsByName(config.nicknameWarnChannelName, true)
+        .getTextChannelsByName(Constants.Nicknames.WARN_TEXT_CHANNEL_NAME, true)
         .asScala
         .headOption
     } match {
