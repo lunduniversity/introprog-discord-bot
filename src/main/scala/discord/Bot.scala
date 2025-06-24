@@ -86,7 +86,7 @@ class Bot(config: BotConfig) extends ListenerAdapter {
   ): Unit = {
     findWarningChannel(member.getGuild) match {
       case Some(channel) =>
-        val nicknameText = nickname.getOrElse("(saknat smeknamn)")
+        val nicknameText = nickname.getOrElse(member.getEffectiveName)
         val message =
           s"${member.getAsMention}, ditt smeknamn `$nicknameText` följer inte formatet `Förnamn Efternamn`."
 

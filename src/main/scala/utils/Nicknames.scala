@@ -6,9 +6,12 @@ object Nicknames:
 
   private val grid: Grid = {
     val resource = getClass.getClassLoader.getResource("names.csv")
-    if resource == null then
-      throw RuntimeException("names.csv not found in resources")
-    Grid.fromFile(resource.getPath, delim = ';')
+    if (resource == null)
+      throw new RuntimeException("names.csv not found in resources")
+    Grid.fromURL(
+      resource.toString,
+      delim = ';'
+    )
   }
 
   private val names: Set[String] =
