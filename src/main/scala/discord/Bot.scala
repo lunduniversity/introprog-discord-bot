@@ -28,6 +28,9 @@ class Bot(config: BotConfig) extends ListenerAdapter {
   override def onGuildMemberJoin(event: GuildMemberJoinEvent): Unit =
     val member = event.getMember
     val guild = event.getGuild
+    val user = member.getUser
+
+    if user.isBot then return
 
     Logger.info(
       s"Member ${member.getEffectiveName} joined guild ${guild.getName}"
@@ -55,12 +58,15 @@ class Bot(config: BotConfig) extends ListenerAdapter {
   ): Unit =
     val newNickname = Option(event.getNewNickname)
     val member = event.getMember
+    val user = member.getUser
+
+    if user.isBot then return
 
     Logger.info(
       s"Nickname updated for ${member.getEffectiveName}: ${newNickname.getOrElse("None")}"
     )
 
-    if (!isNicknameValid(newNickname)) then
+    if !isNicknameValid(newNickname) then
       sendNicknameWarning(member, newNickname)
 
   private def checkMemberNickname(member: Member): Unit =
@@ -69,7 +75,7 @@ class Bot(config: BotConfig) extends ListenerAdapter {
 
     Logger.info(s"Checking nickname for member: $displayName")
 
-    if (!isNicknameValid(nickname)) then sendNicknameWarning(member, nickname)
+    if !isNicknameValid(nickname) then sendNicknameWarning(member, nickname)
 
   private def isNicknameValid(nickname: Option[String]): Boolean =
     nickname.map(Nicknames.isValid).getOrElse(false)
@@ -80,10 +86,9 @@ class Bot(config: BotConfig) extends ListenerAdapter {
   ): Unit = {
     findWarningChannel(member.getGuild) match {
       case Some(channel) =>
-        val nicknameText = nickname.getOrElse("(no nickname set)")
-        val message = s"⚠️ **Nickname Policy Violation**\n" +
-          s"${member.getAsMention}, your nickname `$nicknameText` doesn't follow our naming policy.\n" +
-          s"Please set your nickname to follow the format: `FirstName LastName`"
+        val nicknameText = nickname.getOrElse("(saknat smeknamn)")
+        val message =
+          s"${member.getAsMention}, ditt smeknamn `$nicknameText` följer inte formatet `Förnamn Efternamn`."
 
         sendTextChannelMessage(channel, message)
         Logger.info(
@@ -139,7 +144,7 @@ class Bot(config: BotConfig) extends ListenerAdapter {
   def shutdown(): Unit =
     Try {
       scheduler.shutdown()
-      if (!scheduler.awaitTermination(10, TimeUnit.SECONDS)) then
+      if !scheduler.awaitTermination(10, TimeUnit.SECONDS) then
         scheduler.shutdownNow()
         Logger.warning(
           "Scheduler did not terminate gracefully, forced shutdown"
