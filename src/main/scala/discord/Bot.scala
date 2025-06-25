@@ -150,6 +150,7 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
         )
       else Logger.info("Scheduler terminated gracefully")
 
+      Nicknames.shutdown()
     } match
       case Failure(ex) =>
         Logger.error(s"Error during shutdown: ${ex.getMessage}")
