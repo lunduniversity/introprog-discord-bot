@@ -3,7 +3,6 @@ package utils
 import tabby.Grid
 
 object Nicknames:
-
   private val grid: Grid = {
     val resource = getClass.getClassLoader.getResource("names.csv")
     if (resource == null)

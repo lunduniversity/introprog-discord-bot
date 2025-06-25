@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.Member
 
 // Internal imports
 import config.{BotConfig, Constants}
-import utils.Logger
+import utils.{Logger, ScheduledTask}
 import utils.Nicknames
 
 // Scala imports
@@ -19,11 +19,24 @@ import scala.jdk.CollectionConverters.*
 // Java imports
 import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.entities.Guild
 
 class Bot(botConfig: BotConfig) extends ListenerAdapter {
 
   private val scheduler: ScheduledExecutorService =
     Executors.newScheduledThreadPool(2)
+
+  private class NicknameCheckTask(
+      guild: Guild,
+      memberId: String
+  ) extends ScheduledTask {
+    protected val taskName = s"NicknameCheck-$memberId"
+
+    protected def executeTask(): Unit = {
+      val refreshedMember = guild.retrieveMemberById(memberId).complete()
+      checkMemberNickname(refreshedMember)
+    }
+  }
 
   override def onGuildMemberJoin(event: GuildMemberJoinEvent): Unit =
     val member = event.getMember
@@ -36,21 +49,7 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
       s"Member ${member.getEffectiveName} joined guild ${guild.getName}"
     )
 
-    val nicknameCheckTask = new Runnable {
-      def run(): Unit =
-        try {
-          val refreshedMember =
-            guild.retrieveMemberById(member.getId).complete()
-          checkMemberNickname(refreshedMember)
-        } catch {
-          case ex: Exception =>
-            Logger.error(
-              s"Failed to check nickname for member ${member.getId}: ${ex.getMessage}"
-            )
-        }
-
-    }
-
+    val nicknameCheckTask = new NicknameCheckTask(guild, member.getId)
     scheduler.schedule(nicknameCheckTask, 5, TimeUnit.MINUTES)
 
   override def onGuildMemberUpdateNickname(
