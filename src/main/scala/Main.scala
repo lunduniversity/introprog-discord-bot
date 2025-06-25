@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag
 // Internal imports
 import discord.Bot
 import config.BotConfig
-import utils.Logger
+import utils.{Logger, Nicknames}
 
 // Scala imports
 import scala.util.{Try, Success, Failure}
@@ -44,6 +44,9 @@ def instantiateBot(config: BotConfig): Unit =
 
 def startBot(bot: Bot, jda: JDA): Unit =
   Try {
+    // Initialize Nicknames object to start file watching
+    Nicknames.isValid("_") // Dummy call to trigger initialization
+    
     jda.awaitReady()
     Logger.info("Bot is now running! Press Ctrl+C to stop.")
 
@@ -62,4 +65,5 @@ def startBot(bot: Bot, jda: JDA): Unit =
 def stopBot(bot: Bot, jda: JDA): Unit =
   Logger.info("Shutting down gracefully...")
   bot.shutdown()
+  Nicknames.shutdown()
   jda.shutdown()
