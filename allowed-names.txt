@@ -1,5 +1,4 @@
-Björn Regnell
-Ebbe Flisbäck
-Lovisa Löfgren
-William Sonesson
-Testus Testsson
+Regnell Björn
+Flisbäck Ebbe
+Testsson Testus
+Sa Hoppsan

@@ -1,6 +1,7 @@
 package utils
 
 import java.util.concurrent.{CopyOnWriteArraySet, Executors}
+import scala.jdk.CollectionConverters.*
 import java.nio.file.{
   FileSystems,
   Files,
@@ -16,8 +17,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import config.Constants
 
 object Nicknames:
+  private case class Name(first: String, last: String):
+    def isValid(nickname: String): Boolean = s"$first $last" == nickname
+
   private val allowedNames =
-    CopyOnWriteArraySet[String]() // Thread safe Set-isch Java collection
+    CopyOnWriteArraySet[Name]() // Thread safe Set-isch Java collection
   private val executorService = Executors.newSingleThreadExecutor()
   private implicit val ec: ExecutionContext =
     ExecutionContext.fromExecutor(executorService)
@@ -41,7 +45,10 @@ object Nicknames:
           .lines(os.Path(namesFilePath))
           .map(_.trim)
           .filter(_.nonEmpty)
-          .foreach(allowedNames.add)
+          .foreach(l =>
+            val parts = l.split(' ')
+            allowedNames.add(Name(parts(1), parts(0)))
+          )
         Logger.info(
           s"Loaded ${allowedNames.size()} allowed names from ${namesFilePath}"
         )
@@ -81,7 +88,7 @@ object Nicknames:
   loadNames()
   startWatching()
 
-  def isValid(nickname: String): Boolean = allowedNames.contains(nickname)
+  def isValid(nickname: String): Boolean = allowedNames.asScala.exists(_.isValid(nickname))
 
   def shutdown(): Unit =
     Try {
