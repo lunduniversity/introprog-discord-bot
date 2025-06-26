@@ -44,9 +44,7 @@ def instantiateBot(config: BotConfig): Unit =
 
 def startBot(bot: Bot, jda: JDA): Unit =
   Try {
-    // Initialize Nicknames object to start file watching
-    Nicknames.isValid("_") // Dummy call to trigger initialization
-    
+    Nicknames.loadNames()
     jda.awaitReady()
     Logger.info("Bot is now running! Press Ctrl+C to stop.")
 

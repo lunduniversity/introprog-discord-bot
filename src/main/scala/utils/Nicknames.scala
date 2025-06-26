@@ -37,7 +37,7 @@ object Nicknames:
     StandardWatchEventKinds.ENTRY_CREATE // This is needed because some text editors modify files by simply deleting then creating the file :O
   )
 
-  private def loadNames(): Unit =
+  def loadNames(): Unit =
     Try {
       allowedNames.clear()
       if (Files.exists(namesFilePath)) {
@@ -85,7 +85,6 @@ object Nicknames:
       }
   }
 
-  loadNames()
   startWatching()
 
   def isValid(nickname: String): Boolean = allowedNames.asScala.exists(_.isValid(nickname))
