@@ -1,7 +1,7 @@
-package config
+package dbot
 
 // Internal imports
-import utils.Logger
+import dbot.Logger
 
 // Scala imports
 import scala.util.{Try, Success, Failure}

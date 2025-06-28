@@ -1,4 +1,6 @@
-package utils
+package dbot
+
+import dbot.Nicknames
 
 class NicknamesTest extends munit.FunSuite {
 

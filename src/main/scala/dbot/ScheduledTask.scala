@@ -1,4 +1,4 @@
-package utils
+package dbot
 
 trait ScheduledTask extends Runnable:
   protected def taskName: String

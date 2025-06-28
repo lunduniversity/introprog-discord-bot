@@ -1,4 +1,4 @@
-package utils
+package dbot
 
 import java.util.concurrent.{CopyOnWriteArraySet, Executors}
 import scala.jdk.CollectionConverters.*
@@ -14,7 +14,7 @@ import java.nio.file.{
 }
 import scala.util.{Try, Using}
 import scala.concurrent.{ExecutionContext, Future}
-import config.Constants
+import dbot.Constants
 
 object Nicknames:
   private case class Name(first: String, last: String):

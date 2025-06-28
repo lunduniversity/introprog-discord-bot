@@ -1,4 +1,4 @@
-package config
+package dbot
 
 object Constants:
   val EXAMPLE = "wow" // Accessible as config.Constants.EXAMPLE

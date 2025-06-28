@@ -1,4 +1,4 @@
-package discord
+package dbot
 
 // External imports
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -8,9 +8,9 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.entities.Member
 
 // Internal imports
-import config.{BotConfig, Constants}
-import utils.{Logger, ScheduledTask}
-import utils.Nicknames
+import dbot.{BotConfig, Constants}
+import dbot.{Logger, ScheduledTask}
+import dbot.Nicknames
 
 // Scala imports
 import scala.util.{Try, Success, Failure}

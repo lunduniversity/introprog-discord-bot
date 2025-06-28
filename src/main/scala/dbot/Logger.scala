@@ -1,4 +1,4 @@
-package utils
+package dbot
 
 enum LogLevel:
   case DEBUG, INFO, WARNING, ERROR, SUCCESS

@@ -5,9 +5,9 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 
 // Internal imports
-import discord.Bot
-import config.BotConfig
-import utils.{Logger, Nicknames}
+import dbot.Bot
+import dbot.BotConfig
+import dbot.{Logger, Nicknames}
 
 // Scala imports
 import scala.util.{Try, Success, Failure}
