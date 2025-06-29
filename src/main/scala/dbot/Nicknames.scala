@@ -1,48 +1,26 @@
 package dbot
 
-import java.util.concurrent.{CopyOnWriteArraySet, Executors}
+import java.util.concurrent.CopyOnWriteArraySet
 import scala.jdk.CollectionConverters.*
-import java.nio.file.{
-  FileSystems,
-  Files,
-  Path,
-  Paths,
-  StandardWatchEventKinds,
-  WatchEvent,
-  WatchKey,
-  WatchService
-}
-import scala.util.{Try, Using}
-import scala.concurrent.{ExecutionContext, Future}
+import java.nio.file.{Files, Path}
+import scala.util.Try
 import dbot.Constants
 
-object Nicknames:
+object Nicknames extends FileWatcher:
   private case class Name(first: String, last: String):
     def isValid(nickname: String): Boolean = s"$first $last" == nickname
 
+  protected val fileName: String = "allowed-names.txt"
+
   private val allowedNames =
     CopyOnWriteArraySet[Name]() // Thread safe Set-isch Java collection
-  private val executorService = Executors.newSingleThreadExecutor()
-  private implicit val ec: ExecutionContext =
-    ExecutionContext.fromExecutor(executorService)
 
-  private val namesFilePath: Path =
-    Paths.get(Constants.Nicknames.ALLOWED_NAMES_FILE_NAME).toAbsolutePath
-
-  private val watchService: WatchService =
-    FileSystems.getDefault.newWatchService()
-  private val watchKey: WatchKey = namesFilePath.getParent.register(
-    watchService,
-    StandardWatchEventKinds.ENTRY_MODIFY,
-    StandardWatchEventKinds.ENTRY_CREATE // This is needed because some text editors modify files by simply deleting then creating the file :O
-  )
-
-  def loadNames(): Unit =
+  protected def loadData(): Unit =
     Try {
       allowedNames.clear()
-      if (Files.exists(namesFilePath)) {
+      if Files.exists(filePath) then 
         os.read
-          .lines(os.Path(namesFilePath))
+          .lines(os.Path(filePath))
           .map(_.trim)
           .filter(_.nonEmpty)
           .foreach(l =>
@@ -50,55 +28,19 @@ object Nicknames:
             allowedNames.add(Name(parts(1), parts(0)))
           )
         Logger.info(
-          s"Loaded ${allowedNames.size()} allowed names from ${namesFilePath}"
+          s"Loaded ${allowedNames.size()} allowed names from ${filePath}"
         )
-      } else {
-        Logger.error(s"Names file not found: ${namesFilePath}")
-      }
+      else Logger.error(s"Names file not found: ${filePath}")
     }.recover { case ex =>
       Logger.errorWithException("Failed to load allowed names: ", ex)
     }
 
-  private def startWatching(): Future[Unit] = Future {
-    while (!Thread.currentThread().isInterrupted) do
-      Try {
-        val key =
-          watchService
-            .take() // This is a blocking call, which means the loop won't be progressing unless an event occurs
-        key.pollEvents.forEach { event =>
-          val kind = event.kind
-          if kind == StandardWatchEventKinds.ENTRY_MODIFY || kind == StandardWatchEventKinds.ENTRY_CREATE
-          then
-            val filename = event.context.asInstanceOf[Path]
-            if (filename.toString == namesFilePath.getFileName.toString) {
-              Thread.sleep(100) // Short delay, ensures write completes
-              loadNames()
-              Logger.info(
-                s"Reloaded allowed names due to file change: $filename"
-              )
-            }
-        }
-        key.reset()
-      }.recover { case ex =>
-        if !Thread.currentThread.isInterrupted then
-          Logger.errorWithException("Error watching file: ", ex)
-      }
-  }
+  protected def logReloadMessage(filename: String): Unit =
+    Logger.info(s"Reloaded allowed names due to file change: $filename")
 
-  startWatching()
+  def initialize(): Unit =
+    Logger.info("Initializing Nicknames object...")
+    loadData()
 
-  def isValid(nickname: String): Boolean = allowedNames.asScala.exists(_.isValid(nickname))
-
-  def shutdown(): Unit =
-    Try {
-      watchKey.cancel()
-      watchService.close()
-      executorService.shutdown()
-      if !executorService.awaitTermination(
-          5,
-          java.util.concurrent.TimeUnit.SECONDS
-        )
-      then executorService.shutdownNow()
-    }.recover { case ex =>
-      Logger.errorWithException("Error during shutdown: ", ex)
-    }
+  def isValid(nickname: String): Boolean =
+    allowedNames.asScala.exists(_.isValid(nickname))

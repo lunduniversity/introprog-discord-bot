@@ -5,4 +5,7 @@ object Constants:
 
   object Nicknames:
     val WARN_TEXT_CHANNEL_NAME = "smeknamn"
-    val ALLOWED_NAMES_FILE_NAME = "allowed-names.txt"
+
+  object Roles:
+    val STUDENT_ROLE_NAME = "Student"
+    val HANDLEDARE_ROLE_NAME = "Handledare"

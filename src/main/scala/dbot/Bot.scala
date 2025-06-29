@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.entities.Member
 // Internal imports
 import dbot.{BotConfig, Constants}
 import dbot.{Logger, ScheduledTask}
-import dbot.Nicknames
+import dbot.{Nicknames, Roles}
 
 // Scala imports
 import scala.util.{Try, Success, Failure}
@@ -52,6 +52,8 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
     val nicknameCheckTask = new NicknameCheckTask(guild, member.getId)
     scheduler.schedule(nicknameCheckTask, 5, TimeUnit.MINUTES)
 
+    assignMemberRole(member)
+
   override def onGuildMemberUpdateNickname(
       event: GuildMemberUpdateNicknameEvent
   ): Unit =
@@ -68,6 +70,9 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
     if !isNicknameValid(newNickname) then
       sendNicknameWarning(member, newNickname)
 
+    val nonEveryoneRoles = member.getRoles.asScala.filterNot(_.isPublicRole)
+    if nonEveryoneRoles.isEmpty then assignMemberRole(member)
+
   private def checkMemberNickname(member: Member): Unit =
     val nickname = Option(member.getNickname)
     val displayName = member.getEffectiveName
@@ -83,7 +88,7 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
       member: Member,
       nickname: Option[String]
   ): Unit = {
-    findWarningChannel(member.getGuild) match {
+    findWarningChannel(member.getGuild) match
       case Some(channel) =>
         val nicknameText = nickname.getOrElse(member.getEffectiveName)
         val message =
@@ -98,7 +103,6 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
         Logger.error(
           s"Warning channel '${Constants.Nicknames.WARN_TEXT_CHANNEL_NAME}' not found in guild ${member.getGuild.getName}"
         )
-    }
   }
 
   private def findWarningChannel(
@@ -109,13 +113,42 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
         .getTextChannelsByName(Constants.Nicknames.WARN_TEXT_CHANNEL_NAME, true)
         .asScala
         .headOption
-    } match {
+    } match
       case Success(channel) => channel
       case Failure(ex) =>
         Logger.error(s"Error finding warning channel: ${ex.getMessage}")
         None
-    }
   }
+
+  private def assignMemberRole(member: Member): Unit =
+    val effectiveName = member.getEffectiveName
+    Logger.info(s"Checking role assignment for member: $effectiveName")
+
+    Roles.getRoleForUser(effectiveName) match {
+      case Some(roleName) =>
+        val guild = member.getGuild
+        val roles = guild.getRolesByName(roleName, true).asScala
+
+        if roles.nonEmpty then
+          val role = roles.head
+          guild
+            .addRoleToMember(member, role)
+            .queue(
+              _ =>
+                Logger.info(
+                  s"Assigned role '$roleName' to ${member.getEffectiveName}"
+                ),
+              error =>
+                Logger.errorWithException(
+                  s"Failed to assign role '$roleName' to ${member.getEffectiveName}",
+                  error
+                )
+            )
+        else
+          Logger.error(s"Role '$roleName' not found in guild ${guild.getName}")
+      case None =>
+        Logger.info(s"No role assignment found for member: $effectiveName")
+    }
 
   private def sendTextChannelMessage(
       channel: TextChannel,
@@ -133,11 +166,10 @@ class Bot(botConfig: BotConfig) extends ListenerAdapter {
               s"Failed to send message to channel ${channel.getName}: ${error.getMessage}"
             )
         )
-    } match {
+    } match
       case Failure(ex) =>
         Logger.error(s"Exception while sending message: ${ex.getMessage}")
       case _ =>
-    }
   }
 
   def shutdown(): Unit =
